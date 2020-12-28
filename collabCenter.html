@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>a decent collaboration center</title>
+	<style>
+		body {
+			font-family: Calibri;
+			font-size: 1.4em;
+		}
+
+		.row {
+			display: flex;
+			border-style: ridge;
+		}
+		.row div {
+			padding: 5px;
+		}
+
+		.photoDiv {
+			width: 35%;
+		}
+		.photoDiv img {
+			width: 100%;
+		}
+
+		.mapDiv iframe {
+			width: 640px;
+			height: 480px;
+			border: 0;
+		}
+
+	</style>
+	<link rel="stylesheet" href="gallery/baguetteBox.min.css">
+</head>
+<body>
+
+	<div id="container"></div>
+
+	<script src="gallery/baguetteBox.min.js"></script>
+	<script src="data.js"></script>
+	<script src="googleApiKey.js"></script>
+	<script>
+		const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${googleApiKey}&zoom=14&q=`
+		const currencyFormatter = new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'})
+
+		console.log('globalData:', globalData);
+
+		let mlsMap = {};
+		globalData.rewData.map(data => {
+			mlsMap[data.mlsNum] = data
+		})
+		globalData.collabData.ListingInfo.map(data => {
+			mlsMap[data.DISPLAY_ID] = { ...mlsMap[data.DISPLAY_ID], data}
+		})
+
+		console.log(mlsMap)
+
+		let sorted = Object.values(mlsMap).sort((a,b) => (new Date(a.data.MATCHDATE) > new Date(b.data.MATCHDATE) ? -1 : 1))
+		console.log(sorted)
+
+		for (const lstng of sorted) {
+			document.getElementById("container").append(createRowDiv(lstng))
+		}
+		for (const lstng of sorted) {
+			baguetteBox.run('#gallery'+lstng.mlsNum);
+		}
+
+
+		function createRowDiv(lstng) {
+			// create row div
+			const newRow = document.createElement("div")
+			newRow.classList.add("row")
+			newRow.id = 'row' + sorted[0].mlsNum
+
+			// create pictures div
+			const picDiv = document.createElement("div")
+			picDiv.classList.add("photoDiv")
+			picDiv.id = "gallery"+lstng.mlsNum
+			for (const picUrl of lstng.pictures) {
+				const aTag = document.createElement("a")
+				aTag.href = picUrl
+
+				const img = document.createElement("img")
+				img.src = picUrl
+				if (!picUrl.includes('01.jpeg')) {
+					img.style = "display: none"
+				}
+				aTag.append(img)
+				picDiv.append(aTag);
+			}
+			newRow.append(picDiv)
+
+			// create map div
+			const mapDiv = document.createElement("div")
+			mapDiv.classList.add("mapDiv")
+			const iframeMap = document.createElement("iframe")
+			let fullAddress = `${lstng.data.ADDRESS}+${lstng.data.CITY}+BC+${lstng.data.ZIP}`.replace(" ", "+")
+			iframeMap.src = mapEmbedUrl + encodeURIComponent(fullAddress)
+			mapDiv.append(iframeMap)
+			newRow.append(mapDiv)
+
+			// create text div
+			const infoDiv = document.createElement("div")
+			infoDiv.classList.add("infoDiv")
+
+			let favStatus = '🤷'
+			if (lstng.data.LISTING_STATUS == 0) favStatus = "😍"
+			else if (lstng.data.LISTING_STATUS == 1) favStatus = "🤔"
+			else if (lstng.data.LISTING_STATUS == 2) favStatus = "🤮"
+
+			infoDiv.innerHTML = `
+				<h3><a href="${lstng.urlPath}" target="_blank">${lstng.mlsNum}${lstng.hasVirtualTour ? " 🎥" : ""}</a></h3>
+				<p>${currencyFormatter.format(lstng.data.PRICE_CURRENT)}<br/>
+				${lstng.data.SQFT} sqft<br/>
+				bed ${lstng.data.BDRMS}, bath ${lstng.data.BATHS_FULL}${lstng.data.BATHS_PART ? ", " + lstng.data.BATHS_PART : ""}<br/>
+				${favStatus}<br/>
+				</p>
+			`
+			newRow.append(infoDiv)
+			return newRow
+		}
+	</script>
+</body>
+</html>
