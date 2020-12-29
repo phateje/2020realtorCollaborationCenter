@@ -83,17 +83,19 @@
 			const picDiv = document.createElement("div")
 			picDiv.classList.add("photoDiv")
 			picDiv.id = "gallery"+lstng.mlsNum
+			let firstPic = true
 			for (const picUrl of lstng.pictures) {
 				const aTag = document.createElement("a")
 				aTag.href = picUrl
 
 				const img = document.createElement("img")
 				img.src = picUrl
-				if (!picUrl.includes('01.jpeg')) {
+				if (!firstPic) {
 					img.style = "display: none"
 				}
 				aTag.append(img)
 				picDiv.append(aTag);
+				firstPic = false;
 			}
 			newRow.append(picDiv)
 
