@@ -37,18 +37,11 @@
 	<div id="container"></div>
 
 	<script src="gallery/baguetteBox.min.js"></script>
-<!--	<script src="data.js"></script>-->
+	<script src="http://www.jovan.ca/2020CollabCenter/data.js"></script>
 	<script src="googleApiKey.js"></script>
 	<script>
 		const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${googleApiKey}&zoom=14&q=`
 		const currencyFormatter = new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'})
-
-		if (!globalData) {
-			console.log('fetching global data from jovan.ca')
-			fetch('http://www.jovan.ca/2020CollabCenter/data.js').then(resp => {
-				globalData = JSON.parse(resp)
-			})
-		}
 
 		console.log('globalData:', globalData);
 
