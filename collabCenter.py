@@ -2,6 +2,7 @@ import requests
 import json
 import re
 import time
+from ftplib import FTP
 
 def getListing(mlsNum):
 	print ("getting mlsNum: " + mlsNum)
@@ -38,16 +39,28 @@ def getListings(mlsNums):
 
 if __name__ == '__main__':
 
+	# create data.js info dump
 	mlsNums = []
-	with open('jsonRequest.txt', 'r') as file, open('listingsInfo.txt', 'w') as outfile, open('data.js', 'w') as jsFile:
+	with open('jsonRequest.txt', 'r') as file, open('data.js', 'w') as jsFile:
 		collabData = json.load(file)
 		mlsNums = (o["DISPLAY_ID"] for o in collabData["ListingInfo"])
 
 		resp = getListings(mlsNums)
-		# json.dump(resp, outfile)
 
 		jsonStr = json.dumps(resp)
 		jsonStr2 = json.dumps(collabData)
 		jsFile.write("var globalData = { \"rewData\": "+jsonStr+", \"collabData\": "+jsonStr2+" }")
+
+	# upload it to ftp server
+	with open('ftpCredentials.txt', 'r') as file:
+		creds = json.load(file)
+
+		ftp = FTP(creds["host"], creds["usr"], creds["pwd"])
+		ftp.cwd('public_html/2020CollabCenter')
+		ftp.retrlines('LIST')
+		with open('data.js', 'rb') as dataFile:
+			ftp.storbinary('STOR data.js', dataFile)
+		ftp.quit()
+
 
 	print("... done")
